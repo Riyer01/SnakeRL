@@ -40,7 +40,9 @@ for i_episode in range(20):
     snake.solve()
     while not done:
         env.render(frame_speed=.005)
-        snake_head, food_location = observation[0], observation[1]
+        #snake_head, food_location = observation[0], observation[1]
+        print(observation)
+        snake_head, food_location = tuple(env.controller.snakes[0].head), env.controller.grid.foodLocations[0] 
         action = findNextMove(snake.board, snake_head[0], snake_head[1])
         observation, reward, done, info = env.step(action)
         totalReward += reward

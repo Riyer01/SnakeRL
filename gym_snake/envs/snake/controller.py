@@ -17,6 +17,7 @@ class Controller():
 
         self.snakes_remaining = n_snakes
         self.grid = Grid(grid_size, unit_size, unit_gap)
+        self.score = 0
 
         self.snakes = []
         self.dead_snakes = []
@@ -74,6 +75,7 @@ class Controller():
             reward = -1
         # Check for reward
         elif self.grid.food_space(snake.head):
+            self.score += 1
             self.grid.draw(snake.body[0], self.grid.BODY_COLOR) # Redraw tail
             self.grid.connect(snake.body[0], snake.body[1], self.grid.BODY_COLOR)
             self.grid.cover(snake.head, snake.head_color) # Avoid miscount of grid.open_space
@@ -81,7 +83,10 @@ class Controller():
             self.grid.foodLocations.remove(tuple(snake.head))
             self.grid.new_food()
         else:
-            reward = 0
+            reward = -.1
+            food = self.grid.foodLocations[0]
+            # distToFood = abs(snake.head[0] - food[0]) + abs(snake.head[1] - food[1])
+            # reward = -.2*distToFood
             empty_coord = snake.body.popleft()
             self.grid.connect(empty_coord, snake.body[0], self.grid.SPACE_COLOR)
             self.grid.draw(snake.head, snake.head_color)
@@ -100,6 +105,45 @@ class Controller():
         self.grid.erase_snake_body(self.dead_snakes[snake_idx])
         self.dead_snakes[snake_idx] = None
         self.snakes_remaining -= 1
+
+    def generateObservationTuple(self, direction):
+        #Observation = [danger left, danger right, danger straight, snake up, snake down, snake left,
+        # snake right, (food_up, food_down)]
+        observation = []
+        if self.snakes and self.snakes[0]:
+            for direction in range(4):
+                if np.abs(self.snakes[0].direction-direction) != 2:
+                    observation.append(int(self.grid.check_death(self.snakes[0].step(self.snakes[0].head, direction))))
+                if self.snakes[0].direction == direction:
+                    observation.append(1)
+                else:
+                    observation.append(0)
+            snake_to_fruit = np.sign([self.snakes[0].head[0] - self.grid.foodLocations[0][0], self.snakes[0].head[1] - self.grid.foodLocations[0][1]])
+            if snake_to_fruit[0] == 1:
+                observation = observation + [1, 0]
+            elif snake_to_fruit[0] == -1:
+                observation = observation + [0, 1]
+            else:
+                observation = observation + [0, 0]
+            if snake_to_fruit[1] == 1:
+                observation = observation + [1, 0]
+            elif snake_to_fruit[1] == -1:
+                observation = observation + [0, 1]
+            else:
+                observation = observation + [0, 0]
+            #observation.append(tuple(snake_to_fruit))
+        else:
+            #observation = [0] * 7 + [(0, 0)]
+            observation = [0] * 11
+        
+        # if self.snakes and self.snakes[0]:
+        #     head = self.snakes[0].head
+        #     last_tail = self.snakes[0].body[-1]
+        #     food = self.grid.foodLocations[0]
+        #     return ((last_tail[0] - head[0], last_tail[1] - head[1]), (food[0] - head[0], food[1] - head[1]))
+        # else:
+        #     return ((0, 0), (0, 0))
+        return observation
 
     def step(self, directions):
         """
@@ -128,24 +172,25 @@ class Controller():
             rewards.append(self.move_result(direction, i))
 
         done = self.snakes_remaining < 1 or self.grid.open_space < 1
-        #Observation = [danger left, danger right, danger straight, snake up, snake down, snake left,
-        # snake right, food up, food down, food left, food right]
-        observation = []
-        if self.snakes and self.snakes[0]:
-            for direction in range(4):
-                if np.abs(self.snakes[0].direction-direction) != 2:
-                    observation.append(int(self.grid.off_grid(self.snakes[0].step(self.snakes[0].head, direction))))
-                if self.snakes[0].direction == direction:
-                    observation.append(1)
-                else:
-                    observation.append(0)
-            snake_to_fruit = np.sign([self.snakes[0].head[0] - self.grid.foodLocations[0][0], self.snakes[0].head[1] - self.grid.foodLocations[0][1]])
-            observation.append(tuple(snake_to_fruit))
-        else:
-            observation = [0] * 7 + [(0, 0)]
-        observation = [tuple(self.snakes[0].head) if self.snakes and self.snakes[0] else None, self.grid.foodLocations[0]]
+        # #Observation = [danger left, danger right, danger straight, snake up, snake down, snake left,
+        # # snake right, (food_up, food_down)]
+        # observation = []
+        # if self.snakes and self.snakes[0]:
+        #     for direction in range(4):
+        #         if np.abs(self.snakes[0].direction-direction) != 2:
+        #             observation.append(int(self.grid.off_grid(self.snakes[0].step(self.snakes[0].head, direction))))
+        #         if self.snakes[0].direction == direction:
+        #             observation.append(1)
+        #         else:
+        #             observation.append(0)
+        #     snake_to_fruit = np.sign([self.snakes[0].head[0] - self.grid.foodLocations[0][0], self.snakes[0].head[1] - self.grid.foodLocations[0][1]])
+        #     observation.append(tuple(snake_to_fruit))
+        # else:
+        #     observation = [0] * 7 + [(0, 0)]
+        #observation = [tuple(self.snakes[0].head) if self.snakes and self.snakes[0] else None, self.grid.foodLocations[0]]
+        observation = self.generateObservationTuple(direction)
         if len(rewards) is 1:
             #used to be self.grid.grid.copy()
-            return observation, rewards[0], done, {"snakes_remaining":self.snakes_remaining}
+            return tuple(observation), rewards[0], done, {"snakes_remaining":self.snakes_remaining}
         else:
-            return observation, rewards, done, {"snakes_remaining":self.snakes_remaining}
+            return tuple(observation), rewards, done, {"snakes_remaining":self.snakes_remaining}
