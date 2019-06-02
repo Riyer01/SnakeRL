@@ -28,7 +28,7 @@ def createEpsilonGreedyPolicy(Q, epsilon, num_actions):
    
     return policyFunction 
 
-env = gym.make('snake-v0', grid_size=[20, 20])
+env = gym.make('snake-v0', grid_size=[8, 8])
 # observation = env.reset()
 
 # eta = .628
@@ -73,7 +73,7 @@ if exists:
 
 
 def qLearning(Q, env, num_episodes, discount_factor = .9, 
-                            alpha = 0.85, epsilon = 0.05): 
+                            alpha = 0.85, epsilon = 0.1): 
     """ 
     Q-Learning algorithm: Off-policy TD control. 
     Finds the optimal greedy policy while improving 
@@ -101,8 +101,8 @@ def qLearning(Q, env, num_episodes, discount_factor = .9,
         while not done:
             # if ith_episode > num_episodes - 9:
             #     env.render(frame_speed=.01) 
-            # env.render(frame_speed=.01)
-            # print(state)
+            env.render(frame_speed=.5)
+            print(state)
             # get probabilities of all actions from current state 
             action_probabilities = policy(state) 
    
@@ -134,14 +134,30 @@ def qLearning(Q, env, num_episodes, discount_factor = .9,
       
     return Q, scores
 
-Q, scores = qLearning(Q, env, 10000)
+numGames = 1000
+
+Q, scores = qLearning(Q, env, numGames)
 # print(sum(scores[950:])/float(len(scores[950:])))
 
 with open('qtable.p', 'wb') as fp:
     pickle.dump(Q, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
+#Plot score after each game
 plt.plot(list(range(len(scores))), scores, 'ro')
 plt.ylabel('Score')
+plt.show()
+
+#Plot average score over previous 500 games
+averages = []
+for i in range(500, len(scores)):
+    averages.append(sum(scores[i-500:i])/float(500))
+
+plt.plot(list(range(500, len(scores))), averages)
+plt.ylabel('Average Score over Last 500 Games')
+
+# max_so_far = [max(scores[:i]) for i in range(1, len(scores)+1)]
+# plt.plot(list(range(len(scores))), max_so_far)
+# plt.ylabel('Max Score Attained by Given Game')
 plt.show()
 
 env.close()

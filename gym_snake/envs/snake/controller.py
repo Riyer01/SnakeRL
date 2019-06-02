@@ -111,13 +111,17 @@ class Controller():
         # snake right, (food_up, food_down)]
         observation = []
         if self.snakes and self.snakes[0]:
+            # for direction in range(4):
+            #     if np.abs(self.snakes[0].direction-direction) != 2:
+            #         observation.append(int(self.grid.check_death(self.snakes[0].step(self.snakes[0].head, direction))))
             for direction in range(4):
-                if np.abs(self.snakes[0].direction-direction) != 2:
-                    observation.append(int(self.grid.check_death(self.snakes[0].step(self.snakes[0].head, direction))))
+                observation.append(int(self.grid.check_death(self.snakes[0].step(self.snakes[0].head, direction))))
+            for direction in range(4):
                 if self.snakes[0].direction == direction:
                     observation.append(1)
                 else:
                     observation.append(0)
+
             snake_to_fruit = np.sign([self.snakes[0].head[0] - self.grid.foodLocations[0][0], self.snakes[0].head[1] - self.grid.foodLocations[0][1]])
             if snake_to_fruit[0] == 1:
                 observation = observation + [1, 0]
