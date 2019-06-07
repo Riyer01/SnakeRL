@@ -8,7 +8,7 @@ import json
 import os
 import pickle
 
-def createEpsilonGreedyPolicy(Q, epsilon, num_actions): 
+def createEpsilonGreedyPolicy(Q, num_actions): 
     """ 
     Creates an epsilon-greedy policy based 
     on a given Q-function and epsilon. 
@@ -18,7 +18,7 @@ def createEpsilonGreedyPolicy(Q, epsilon, num_actions):
     for each action in the form of a numpy array  
     of length of the action space(set of possible actions). 
     """
-    def policyFunction(state): 
+    def policyFunction(state, epsilon): 
    
         Action_probabilities = np.ones(num_actions, 
                 dtype = float) * epsilon / num_actions 
@@ -29,36 +29,6 @@ def createEpsilonGreedyPolicy(Q, epsilon, num_actions):
     return policyFunction 
 
 env = gym.make('snake-v0', grid_size=[8, 8])
-# observation = env.reset()
-
-# eta = .628
-# gma = .9
-# epis = 5000
-# rev_list = [] # rewards per episode calculate
-# Q = {}
-
-# for i in range(epis):
-#     # Reset environment
-#     s = env.reset()
-#     done = False
-
-#     Q = defaultdict(lambda: np.zeros(env.action_space.n))
-#     #The Q-Table learning algorithm
-#     while not done:
-#         env.render()
-#         j+=1
-#         # Choose action from Q table
-#         a = np.argmax(Q[s,:] + np.random.randn(1,env.action_space.n)*(1./(i+1)))
-#         #Get new state & reward from environment
-#         s1,r,d, _ = env.step(int(a))
-#         #Update Q-Table with new knowledge
-#         Q[s][a] = Q[s,a] + eta*(r + gma*np.max(Q[s1,:]) - Q[s,a])
-#         rAll += r
-#         s = s1
-#         if d == True:
-#             break
-#     rev_list.append(rAll)
-#     env.render()
 
 def dd():
     return np.zeros(env.action_space.n)
@@ -73,7 +43,7 @@ if exists:
 
 
 def qLearning(Q, env, num_episodes, discount_factor = .9, 
-                            alpha = 0.85, epsilon = 0.1): 
+                            alpha = 0.7, epsilon = 0.05, min_epsilon=.001, decay_rate=.99): 
     """ 
     Q-Learning algorithm: Off-policy TD control. 
     Finds the optimal greedy policy while improving 
@@ -87,24 +57,24 @@ def qLearning(Q, env, num_episodes, discount_factor = .9,
        
     # Create an epsilon greedy policy function 
     # appropriately for environment action space 
-    policy = createEpsilonGreedyPolicy(Q, epsilon, env.action_space.n) 
+    policy = createEpsilonGreedyPolicy(Q, env.action_space.n) 
     
     scores = [0] * num_episodes
     # For every episode 
     for ith_episode in range(num_episodes): 
-           
+        epsilon
         # Reset the environment and pick the first action 
         state = env.reset() 
         done = False
         t = 0
         totalReward = 0
         while not done:
-            # if ith_episode > num_episodes - 9:
-            #     env.render(frame_speed=.01) 
-            env.render(frame_speed=.5)
-            print(state)
+            if ith_episode > num_episodes - 9 or ith_episode < 9:
+                env.render(frame_speed=.01) 
+            #env.render(frame_speed=.005)
+            
             # get probabilities of all actions from current state 
-            action_probabilities = policy(state) 
+            action_probabilities = policy(state, epsilon) 
    
             # choose action according to  
             # the probability distribution 
@@ -131,13 +101,12 @@ def qLearning(Q, env, num_episodes, discount_factor = .9,
                 break
                    
             state = next_state 
-      
+        epsilon = epsilon * decay_rate if epsilon > min_epsilon else min_epsilon
     return Q, scores
 
 numGames = 1000
 
 Q, scores = qLearning(Q, env, numGames)
-# print(sum(scores[950:])/float(len(scores[950:])))
 
 with open('qtable.p', 'wb') as fp:
     pickle.dump(Q, fp, protocol=pickle.HIGHEST_PROTOCOL)
@@ -154,10 +123,12 @@ for i in range(500, len(scores)):
 
 plt.plot(list(range(500, len(scores))), averages)
 plt.ylabel('Average Score over Last 500 Games')
+plt.xlabel('Number of Games')
 
 # max_so_far = [max(scores[:i]) for i in range(1, len(scores)+1)]
 # plt.plot(list(range(len(scores))), max_so_far)
 # plt.ylabel('Max Score Attained by Given Game')
 plt.show()
+print(sum(scores)/float(len(scores)))
 
 env.close()

@@ -31,23 +31,23 @@ def findNextMove(cycle, x, y):
     if equalsGoal(cycle, x, y+1, goal):
         return 2
 
+scores = [0] * 100
 for i_episode in range(20):
     observation = env.reset()
     totalReward = 0
     done = False
     t = 0
-    snake = Hamilton(moves, size_x, size_y, observation[0][0], observation[0][1], closed=True)
+    snake = Hamilton(moves, size_x, size_y, env.controller.snakes[0].head[0], env.controller.snakes[0].head[1], closed=True)
     snake.solve()
     while not done:
-        env.render(frame_speed=.005)
-        #snake_head, food_location = observation[0], observation[1]
-        print(observation)
+        env.render(frame_speed=.001)
         snake_head, food_location = tuple(env.controller.snakes[0].head), env.controller.grid.foodLocations[0] 
         action = findNextMove(snake.board, snake_head[0], snake_head[1])
         observation, reward, done, info = env.step(action)
         totalReward += reward
         t += 1
         if done:
-            print("Episode finished after {} timesteps with reward {}".format(t+1, totalReward))
+            scores[i_episode] = env.controller.score
+            print("Episode finished after {} timesteps with reward {} and score {}".format(t, totalReward, env.controller.score))
             break
 env.close()

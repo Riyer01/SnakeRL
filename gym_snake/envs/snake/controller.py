@@ -107,15 +107,14 @@ class Controller():
         self.snakes_remaining -= 1
 
     def generateObservationTuple(self, direction):
-        #Observation = [danger left, danger right, danger straight, snake up, snake down, snake left,
+        #Observation = [danger up, danger left, danger right, snake up, snake down, snake left,
         # snake right, (food_up, food_down)]
         observation = []
         if self.snakes and self.snakes[0]:
-            # for direction in range(4):
-            #     if np.abs(self.snakes[0].direction-direction) != 2:
-            #         observation.append(int(self.grid.check_death(self.snakes[0].step(self.snakes[0].head, direction))))
-            for direction in range(4):
-                observation.append(int(self.grid.check_death(self.snakes[0].step(self.snakes[0].head, direction))))
+            directionMap = {0:[0, 3, 1], 1:[1, 0, 2], 2:[2, 1, 3], 3:[3, 2, 0]}
+            for relativeDirec in directionMap[self.snakes[0].direction]:
+                    observation.append(int(self.grid.check_death(self.snakes[0].step(self.snakes[0].head, relativeDirec))))
+
             for direction in range(4):
                 if self.snakes[0].direction == direction:
                     observation.append(1)
@@ -124,15 +123,15 @@ class Controller():
 
             snake_to_fruit = np.sign([self.snakes[0].head[0] - self.grid.foodLocations[0][0], self.snakes[0].head[1] - self.grid.foodLocations[0][1]])
             if snake_to_fruit[0] == 1:
-                observation = observation + [1, 0]
-            elif snake_to_fruit[0] == -1:
                 observation = observation + [0, 1]
+            elif snake_to_fruit[0] == -1:
+                observation = observation + [1, 0]
             else:
                 observation = observation + [0, 0]
             if snake_to_fruit[1] == 1:
-                observation = observation + [1, 0]
-            elif snake_to_fruit[1] == -1:
                 observation = observation + [0, 1]
+            elif snake_to_fruit[1] == -1:
+                observation = observation + [1, 0]
             else:
                 observation = observation + [0, 0]
             #observation.append(tuple(snake_to_fruit))
