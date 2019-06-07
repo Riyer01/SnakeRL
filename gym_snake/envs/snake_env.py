@@ -40,7 +40,7 @@ class SnakeEnv(gym.Env):
         self.last_obs = self.controller.grid.grid.copy()
         obs = [tuple(self.controller.snakes[0].head) if self.controller.snakes and self.controller.snakes[0] else None, self.controller.grid.foodLocations[0]]
         #return self.last_obs
-        return obs
+        return tuple(self.controller.generateObservationTuple(int(self.controller.snakes[0].direction)))
 
     def render(self, mode='human', close=False, frame_speed=.1):
         if self.viewer is None:
