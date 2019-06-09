@@ -13,7 +13,7 @@ def generateMoveQueue(path):
         return [move_map[(y[0]-x[0], y[1]-x[1])] for x, y in zip(path, path[1:])]
     return [0] * 1000
 
-def getGreedyAction(snake_head, food_location, grid):
+def generateBFSPath(snake_head, food_location, grid):
     start = snake_head
     end = food_location
 
@@ -79,7 +79,7 @@ for i_episode in range(num_games):
         # if move_queue:
         #     action = move_queue.pop(0)
         # else:
-        #     move_queue = getGreedyAction(snake_head, food_location, deepcopy(env.controller.grid))
+        #     move_queue = generateBFSPath(snake_head, food_location, deepcopy(env.controller.grid))
         #     action = move_queue.pop(0)
         observation, reward, done, info = env.step(action)
         totalReward += reward

@@ -3,7 +3,8 @@ import gym_snake
 from hamilton import Hamilton
 from random import randint
 
-env = gym.make('snake-v0')
+env = gym.make('snake-v0', grid_size = [8, 8])
+
 observation = env.reset()
 
 num_games = 1000
@@ -15,7 +16,7 @@ for i_episode in range(num_games):
     done = False
     t = 0
     while not done:
-        #env.render()
+        env.render()
         action = randint(0, 4)
         observation, reward, done, info = env.step(action)
         totalReward += reward

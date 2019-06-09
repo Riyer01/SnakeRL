@@ -33,6 +33,8 @@ env = gym.make('snake-v0', grid_size=[8, 8])
 def dd():
     return np.zeros(env.action_space.n)
 
+# A nested dictionary that maps 
+# state -> (action -> action-value). 
 Q = defaultdict(dd) 
 
 exists = os.path.isfile('qtable.p')
@@ -43,15 +45,14 @@ if exists:
 
 
 def qLearning(Q, env, num_episodes, discount_factor = .9, 
-                            alpha = 0.7, epsilon = 0.05, min_epsilon=.001, decay_rate=.99): 
+                            alpha = 0.85, epsilon = 0.6, min_epsilon=.001, decay_rate=.99): 
     """ 
     Q-Learning algorithm: Off-policy TD control. 
     Finds the optimal greedy policy while improving 
     following an epsilon-greedy policy"""
        
     # Action value function 
-    # A nested dictionary that maps 
-    # state -> (action -> action-value). 
+    
     #Q = defaultdict(lambda: np.zeros(env.action_space.n)) 
    
        
@@ -69,8 +70,8 @@ def qLearning(Q, env, num_episodes, discount_factor = .9,
         t = 0
         totalReward = 0
         while not done:
-            if ith_episode > num_episodes - 9 or ith_episode < 9:
-                env.render(frame_speed=.01) 
+            # if ith_episode > num_episodes - 9 or ith_episode < 9:
+            #     env.render(frame_speed=.01) 
             #env.render(frame_speed=.005)
             
             # get probabilities of all actions from current state 
@@ -104,17 +105,17 @@ def qLearning(Q, env, num_episodes, discount_factor = .9,
         epsilon = epsilon * decay_rate if epsilon > min_epsilon else min_epsilon
     return Q, scores
 
-numGames = 1000
+numGames = 10000
 
 Q, scores = qLearning(Q, env, numGames)
 
 with open('qtable.p', 'wb') as fp:
     pickle.dump(Q, fp, protocol=pickle.HIGHEST_PROTOCOL)
 
-#Plot score after each game
-plt.plot(list(range(len(scores))), scores, 'ro')
-plt.ylabel('Score')
-plt.show()
+# #Plot score after each game
+# plt.plot(list(range(len(scores))), scores, 'ro')
+# plt.ylabel('Score')
+# plt.show()
 
 #Plot average score over previous 500 games
 averages = []
@@ -125,10 +126,24 @@ plt.plot(list(range(500, len(scores))), averages)
 plt.ylabel('Average Score over Last 500 Games')
 plt.xlabel('Number of Games')
 
-# max_so_far = [max(scores[:i]) for i in range(1, len(scores)+1)]
-# plt.plot(list(range(len(scores))), max_so_far)
-# plt.ylabel('Max Score Attained by Given Game')
 plt.show()
-print(sum(scores)/float(len(scores)))
+n = len(scores)
+print(sum(scores[n-100:])/float(len(scores[n-100:])))
+
+# epsilon_values = []
+# ave_scores = []
+# numGames = 1100
+# for epsilon in np.linspace(0, .5, 20):
+#     print("TRAINING ON EPSILON = %s" % epsilon)
+#     Q, scores = qLearning(defaultdict(dd), env, numGames, epsilon=epsilon)
+#     ave_scores.append(sum(scores[numGames-100:])/float(len(scores[numGames-100:])))
+#     epsilon_values.append(epsilon)
+
+# plt.plot(epsilon_values, ave_scores, 'ro')
+# plt.ylabel('Mean Score over Final 100 Games')
+# plt.xlabel('Initial Epsilon Value')
+# plt.show()
+
+
 
 env.close()
