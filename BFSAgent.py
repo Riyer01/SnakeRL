@@ -45,7 +45,8 @@ def BFS(maze, start, end):
                 newPath.append(adjacentSpace)
                 queue.append(newPath)
             visited.add(front)
-    return None  
+    return None 
+
 
 def getAdjacentSpaces(maze, space, visited):
     ''' Returns all legal spaces surrounding the current space
@@ -76,11 +77,11 @@ for i_episode in range(num_games):
         #env.render(frame_speed=.0001)
         snake_head, food_location = tuple(env.controller.snakes[0].head if env.controller.snakes and env.controller.snakes[0] else [0, 0]), env.controller.grid.foodLocations[0]
         action = None
-        # if move_queue:
-        #     action = move_queue.pop(0)
-        # else:
-        #     move_queue = generateBFSPath(snake_head, food_location, deepcopy(env.controller.grid))
-        #     action = move_queue.pop(0)
+        if move_queue:
+            action = move_queue.pop(0)
+        else:
+            move_queue = generateBFSPath(snake_head, food_location, deepcopy(env.controller.grid))
+            action = move_queue.pop(0)
         observation, reward, done, info = env.step(action)
         totalReward += reward
         t += 1

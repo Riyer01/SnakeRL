@@ -45,40 +45,30 @@ if exists:
 
 
 def qLearning(Q, env, num_episodes, discount_factor = .9, 
-                            alpha = 0.85, epsilon = 0.6, min_epsilon=.001, decay_rate=.99): 
+                            alpha = .1, epsilon = 0.5, min_epsilon=.001, decay_rate=.99): 
     """ 
     Q-Learning algorithm: Off-policy TD control. 
     Finds the optimal greedy policy while improving 
     following an epsilon-greedy policy"""
-       
-    # Action value function 
     
-    #Q = defaultdict(lambda: np.zeros(env.action_space.n)) 
-   
-       
-    # Create an epsilon greedy policy function 
-    # appropriately for environment action space 
+    
     policy = createEpsilonGreedyPolicy(Q, env.action_space.n) 
     
     scores = [0] * num_episodes
-    # For every episode 
     for ith_episode in range(num_episodes): 
         epsilon
-        # Reset the environment and pick the first action 
         state = env.reset() 
         done = False
         t = 0
         totalReward = 0
         while not done:
+            #Uncomment to run first 10 and last 10 iterations graphically
             # if ith_episode > num_episodes - 9 or ith_episode < 9:
             #     env.render(frame_speed=.01) 
-            #env.render(frame_speed=.005)
             
             # get probabilities of all actions from current state 
             action_probabilities = policy(state, epsilon) 
    
-            # choose action according to  
-            # the probability distribution 
             action = np.random.choice(np.arange( 
                       len(action_probabilities)), 
                        p = action_probabilities) 
@@ -88,14 +78,13 @@ def qLearning(Q, env, num_episodes, discount_factor = .9,
    
             totalReward += reward
 
-            # TD Update 
+            # Q-learning update Update 
             best_next_action = np.argmax(Q[next_state])     
             td_target = reward + discount_factor * Q[next_state][best_next_action] 
             td_delta = td_target - Q[state][action] 
             Q[state][action] += alpha * td_delta 
 
-            t += 1
-            # done is True if episode terminated    
+            t += 1 
             if done:
                 scores[ith_episode] = env.controller.score
                 print("Episode finished after {} timesteps with reward {} and score {}".format(t, totalReward, env.controller.score))
@@ -105,12 +94,15 @@ def qLearning(Q, env, num_episodes, discount_factor = .9,
         epsilon = epsilon * decay_rate if epsilon > min_epsilon else min_epsilon
     return Q, scores
 
-numGames = 10000
+numGames = 5000
 
 Q, scores = qLearning(Q, env, numGames)
 
-with open('qtable.p', 'wb') as fp:
-    pickle.dump(Q, fp, protocol=pickle.HIGHEST_PROTOCOL)
+# with open('qtable.p', 'wb') as fp:
+#     pickle.dump(Q, fp, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+#Misc data visualization code 
 
 # #Plot score after each game
 # plt.plot(list(range(len(scores))), scores, 'ro')
@@ -118,30 +110,64 @@ with open('qtable.p', 'wb') as fp:
 # plt.show()
 
 #Plot average score over previous 500 games
-averages = []
-for i in range(500, len(scores)):
-    averages.append(sum(scores[i-500:i])/float(500))
+# averages = []
+# for i in range(500, len(scores)):
+#     averages.append(sum(scores[i-500:i])/float(500))
 
-plt.plot(list(range(500, len(scores))), averages)
-plt.ylabel('Average Score over Last 500 Games')
+# plt.plot(list(range(500, len(scores))), averages)
+# plt.ylabel('Average Score over Last 500 Games')
+# plt.xlabel('Number of Games')
+
+averages = []
+for i in range(100, len(scores)):
+    averages.append(sum(scores[i-100:i])/float(100))
+
+plt.plot(list(range(100, len(scores))), averages)
+plt.ylabel('Average Score over Last 100 Games')
 plt.xlabel('Number of Games')
 
-plt.show()
 n = len(scores)
 print(sum(scores[n-100:])/float(len(scores[n-100:])))
+
+plt.show()
 
 # epsilon_values = []
 # ave_scores = []
 # numGames = 1100
-# for epsilon in np.linspace(0, .5, 20):
+# for epsilon in np.linspace(0.0, .9, 20):
 #     print("TRAINING ON EPSILON = %s" % epsilon)
 #     Q, scores = qLearning(defaultdict(dd), env, numGames, epsilon=epsilon)
 #     ave_scores.append(sum(scores[numGames-100:])/float(len(scores[numGames-100:])))
 #     epsilon_values.append(epsilon)
 
-# plt.plot(epsilon_values, ave_scores, 'ro')
+# (m, b) = np.polyfit(epsilon_values, ave_scores, 1)
+
+# yp = np.polyval([m, b], epsilon_values)
+
+# plt.scatter(epsilon_values, ave_scores)
+# #plt.plot(epsilon_values, yp, color='red')
 # plt.ylabel('Mean Score over Final 100 Games')
-# plt.xlabel('Initial Epsilon Value')
+# plt.xlabel('Epsilon Value')
+# plt.show()
+
+
+# alpha_values = []
+# ave_scores = []
+# numGames = 1100
+# for alpha in np.linspace(.1, .9, 18):
+#     print("TRAINING ON ALPHA = %s" % alpha)
+#     Q, scores = qLearning(defaultdict(dd), env, numGames, alpha=alpha)
+#     ave_scores.append(sum(scores[numGames-100:])/float(len(scores[numGames-100:])))
+#     alpha_values.append(alpha)
+
+# (m, b) = np.polyfit(alpha_values, ave_scores, 1)
+
+# yp = np.polyval([m, b], alpha_values)
+
+# plt.scatter(alpha_values, ave_scores)
+# plt.plot(alpha_values, yp, color='red')
+# plt.ylabel('Mean Score over Final 100 Games')
+# plt.xlabel('Alpha Value')
 # plt.show()
 
 
